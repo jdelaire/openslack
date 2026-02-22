@@ -1,0 +1,1 @@
+Please refer to [docs/project-guidelines.md](docs/project-guidelines.md) for repository guidelines and instructions.
