@@ -88,13 +88,17 @@ func (d *Dispatcher) Handle(msg InboundMessage) {
 
 	// Built-in two-step commands.
 	if cmd == "do" && d.approvals != nil && d.totp != nil {
+		d.logger.Info("command received", "cmd", cmd, "chat_id", msg.ChatID)
 		d.handleDo(msg, args)
 		return
 	}
 	if cmd == "approve" && d.approvals != nil && d.totp != nil {
+		d.logger.Info("command received", "cmd", cmd, "chat_id", msg.ChatID)
 		d.handleApprove(msg, args)
 		return
 	}
+
+	d.logger.Info("command received", "cmd", cmd, "chat_id", msg.ChatID)
 
 	op := d.ops.Get(cmd)
 	if op == nil {
@@ -151,6 +155,7 @@ func (d *Dispatcher) Handle(msg InboundMessage) {
 		return
 	}
 
+	d.logger.Info("command completed", "cmd", cmd, "chat_id", msg.ChatID)
 	d.respond(msg.ChatID, result)
 }
 
@@ -247,6 +252,7 @@ func (d *Dispatcher) handleApprove(msg InboundMessage, args string) {
 		return
 	}
 
+	d.logger.Info("command completed", "cmd", opName, "chat_id", msg.ChatID)
 	d.respond(msg.ChatID, result)
 }
 
