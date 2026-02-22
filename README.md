@@ -27,6 +27,7 @@ OpenSlack has completed **Phase 3 (Security Hardening)** of its development plan
 - ✅ Request Dispatcher & Op Registry
 - ✅ Security Hardening (TOTP, 2-step approval, Policy limits, Rate Limiter)
 - ✅ macOS Keychain Integration
+- ✅ Config-driven custom commands (`~/.openslack/commands.json`)
 - 🚧 Future Phases: Capable file system tools, and LLM planning.
 
 ## Getting Started
@@ -73,9 +74,36 @@ Before running the daemon, you must store your Telegram credentials in the macOS
    Send commands to your Telegram bot (from your allowlisted Chat ID):
    - `/help` - List available commands and their risk levels.
    - `/status` - Check the daemon uptime and system status.
-   - `/cfcnx-workouts` - Trigger weekly workout extraction (if configured).
+   - Any custom commands defined in `~/.openslack/commands.json` (see below).
 
    For protected commands, you must append your TOTP code (e.g., `/command 123456`). High-risk commands will respond with a nonce, requiring you to confirm with `/approve <nonce> <totp>`.
+
+## Custom Commands
+
+You can define shell-based commands via a JSON config file at `~/.openslack/commands.json`. This keeps personal scripts and paths out of the repository.
+
+**Config format:**
+```json
+[
+  {
+    "name": "cfcnx-workouts",
+    "description": "Show CFCNX weekly workouts",
+    "command": "/path/to/your/script.sh",
+    "workdir": "/path/to/working/directory"
+  }
+]
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | Yes | The command name (used as `/name` in Telegram) |
+| `description` | Yes | Shown in `/help` output |
+| `command` | Yes | Shell command or script path to execute |
+| `workdir` | No | Working directory for the command |
+
+Commands are executed via `bash -l -c` for a full login shell environment. All custom commands default to `RiskLow` (require TOTP).
+
+If the config file is missing, the daemon starts normally with no custom commands. If the file exists but contains invalid JSON or entries with missing required fields, the daemon exits with an error.
 
 ## Development
 

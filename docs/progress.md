@@ -84,6 +84,16 @@
 - [x] `go build ./...` compiles
 - [x] `go test ./...` — all 92 tests pass
 
+## Config-driven Custom Commands — DONE
+
+- [x] `core/ops/shell.go` — Generic `ShellOp` type implementing `Op` interface; `LoadCommands()` reads `~/.openslack/commands.json`
+- [x] `core/ops/shell_test.go` — 8 tests (execute, workdir, failing command, risk level, load valid/missing/malformed/empty/missing-name/missing-command)
+- [x] `cmd/openslackd/main.go` — Load custom commands from config, register each as ShellOp, warn on duplicates, skip gracefully if file missing
+- [x] Deleted `core/ops/cfcnx_workouts.go` — Replaced by config-driven approach
+- [x] `~/.openslack/commands.json` — External config for cfcnx-workouts command
+- [x] `go build ./...` compiles
+- [x] `go test ./...` — all tests pass
+
 ## File Layout
 ```
 openslack/
@@ -112,6 +122,8 @@ openslack/
 │   │   ├── risk_test.go
 │   │   ├── status.go            # /status op
 │   │   ├── help.go              # /help op (RiskNone)
+│   │   ├── shell.go             # Config-driven shell commands
+│   │   ├── shell_test.go
 │   │   └── ops_test.go
 │   ├── auth/
 │   │   ├── totp.go              # RFC 6238 TOTP verifier

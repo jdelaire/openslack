@@ -262,7 +262,12 @@ func (d *Dispatcher) resetFailures(chatID int64) {
 	}
 }
 
+const maxMessageLen = 4096
+
 func (d *Dispatcher) respond(chatID int64, text string) {
+	if len(text) > maxMessageLen {
+		text = "…" + text[len(text)-maxMessageLen+len("…"):]
+	}
 	n := Notification{
 		Text:      text,
 		Source:    "dispatcher",
