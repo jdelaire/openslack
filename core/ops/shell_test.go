@@ -54,6 +54,38 @@ func TestShellOpWorkDir(t *testing.T) {
 	}
 }
 
+func TestShellOpWithArgs(t *testing.T) {
+	op := &ops.ShellOp{
+		CmdName: "greet",
+		Desc:    "test args",
+		Command: "echo hello",
+	}
+
+	result, err := op.Execute(context.Background(), "world")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result != "hello world" {
+		t.Errorf("result = %q, want %q", result, "hello world")
+	}
+}
+
+func TestShellOpNoArgs(t *testing.T) {
+	op := &ops.ShellOp{
+		CmdName: "echo-test",
+		Desc:    "test no args",
+		Command: "echo hello",
+	}
+
+	result, err := op.Execute(context.Background(), "")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result != "hello" {
+		t.Errorf("result = %q, want %q", result, "hello")
+	}
+}
+
 func TestShellOpFailingCommand(t *testing.T) {
 	op := &ops.ShellOp{
 		CmdName: "fail-test",

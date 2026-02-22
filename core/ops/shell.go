@@ -20,8 +20,12 @@ type ShellOp struct {
 func (s *ShellOp) Name() string        { return s.CmdName }
 func (s *ShellOp) Description() string  { return s.Desc }
 
-func (s *ShellOp) Execute(ctx context.Context, _ string) (string, error) {
-	cmd := exec.CommandContext(ctx, "bash", "-l", "-c", s.Command)
+func (s *ShellOp) Execute(ctx context.Context, args string) (string, error) {
+	command := s.Command
+	if args != "" {
+		command = s.Command + " " + args
+	}
+	cmd := exec.CommandContext(ctx, "bash", "-l", "-c", command)
 	if s.WorkDir != "" {
 		cmd.Dir = s.WorkDir
 	}
