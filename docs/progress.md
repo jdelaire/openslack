@@ -60,6 +60,30 @@
 - [x] `go build ./...` compiles
 - [x] `go test ./...` — all 58 tests pass
 
+## Phase 3: Security Hardening — DONE
+
+### Batch 1: Risk levels + TOTP + Rate limiter + Approval store — DONE
+- [x] `core/ops/risk.go` — RiskLevel type (None/Low/High), RiskClassifier interface, RiskOf() helper
+- [x] `core/ops/risk_test.go` — 4 tests (default-to-low, classifier, level ordering, high-risk)
+- [x] `core/ops/help.go` — Added `Risk() RiskLevel` returning RiskNone
+- [x] `core/auth/totp.go` — RFC 6238 HMAC-SHA1, base32 secret, 30s steps, +-1 drift tolerance
+- [x] `core/auth/totp_test.go` — 11 tests (current/prev/next step, 2-steps-away, invalid, wrong-length, bad/empty secret, lowercase, deterministic, different-counters)
+- [x] `core/ratelimit/limiter.go` — 5 failures in 15min → 15min lockout, per chat ID, injectable clock
+- [x] `core/ratelimit/limiter_test.go` — 8 tests (new-chat, under/at-limit, lockout-expiry, old-failures-expire, independent-chats, reset, reset-then-fail)
+- [x] `core/approval/store.go` — crypto/rand hex nonce, 2-min expiry, 100 max pending, auto-prune
+- [x] `core/approval/store_test.go` — 8 tests (create/consume, double-consume, unknown, wrong-chat, expiry, capacity, nonce-hex, expiry-frees-capacity)
+
+### Batch 2: Dispatcher integration — DONE
+- [x] `core/dispatcher.go` — TOTPVerifier/RateLimiter/ApprovalStore interfaces, WithSecurity() builder, extractTOTP(), handleDo(), handleApprove(), risk-level branching
+- [x] `core/dispatcher_test.go` — 17 new tests (TOTP valid/invalid/missing, RiskNone bypass, rate-limit lockout, high-risk rejection, /do flow + invalid/missing TOTP + unknown op + empty args, /approve flow + invalid TOTP + expired nonce + missing TOTP, nil-security backward compat)
+- [x] All 8 existing dispatcher tests pass unchanged
+
+### Batch 3: Daemon wiring — DONE
+- [x] `cmd/openslackd/main.go` — Load totp-secret from keychain, wire auth.New + ratelimit.New + approval.New via dispatcher.WithSecurity; graceful degradation if secret not provisioned
+- [x] `docs/progress.md` — Phase 3 progress
+- [x] `go build ./...` compiles
+- [x] `go test ./...` — all 92 tests pass
+
 ## File Layout
 ```
 openslack/
@@ -84,9 +108,20 @@ openslack/
 │   ├── ops/
 │   │   ├── registry.go          # Op interface + registry
 │   │   ├── registry_test.go
+│   │   ├── risk.go              # RiskLevel + RiskClassifier + RiskOf
+│   │   ├── risk_test.go
 │   │   ├── status.go            # /status op
-│   │   ├── help.go              # /help op
+│   │   ├── help.go              # /help op (RiskNone)
 │   │   └── ops_test.go
+│   ├── auth/
+│   │   ├── totp.go              # RFC 6238 TOTP verifier
+│   │   └── totp_test.go
+│   ├── ratelimit/
+│   │   ├── limiter.go           # Per-chat failure rate limiter
+│   │   └── limiter_test.go
+│   ├── approval/
+│   │   ├── store.go             # Two-step approval nonce store
+│   │   └── store_test.go
 │   └── policy/
 │       ├── policy.go            # Chat allowlist + freshness + dedup
 │       └── policy_test.go

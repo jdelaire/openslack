@@ -13,6 +13,7 @@ type HelpOp struct {
 
 func (h *HelpOp) Name() string        { return "help" }
 func (h *HelpOp) Description() string  { return "List available commands" }
+func (h *HelpOp) Risk() RiskLevel      { return RiskNone }
 
 func (h *HelpOp) Execute(_ context.Context, _ string) (string, error) {
 	all := h.Registry.List()

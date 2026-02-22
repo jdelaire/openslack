@@ -35,3 +35,6 @@ openslackd
 *.swp
 *.swo
 *~
+
+# secrets
+.env
