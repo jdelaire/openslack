@@ -169,6 +169,31 @@ func (m *Manager) Call(ctx context.Context, connectorName string, req *Request) 
 	}
 }
 
+// StopConnector stops a single connector by name.
+func (m *Manager) StopConnector(name string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	proc, ok := m.procs[name]
+	if !ok {
+		return fmt.Errorf("connector %q not running", name)
+	}
+
+	proc.stdin.Close()
+	if err := proc.cmd.Process.Kill(); err != nil {
+		m.logger.Warn("failed to kill connector", "name", name, "error", err)
+	}
+	proc.cmd.Wait()
+	delete(m.procs, name)
+	m.logger.Info("connector stopped", "name", name)
+	return nil
+}
+
+// StartConnector launches a single connector by name using the given exec path.
+func (m *Manager) StartConnector(name, execPath string) error {
+	return m.startConnector(name, execPath)
+}
+
 // Shutdown stops all connector processes.
 func (m *Manager) Shutdown() {
 	m.mu.Lock()

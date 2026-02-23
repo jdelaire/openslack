@@ -22,7 +22,11 @@ func (s *ShellOp) Description() string  { return s.Desc }
 
 func (s *ShellOp) Execute(ctx context.Context, args string) (string, error) {
 	command := s.Command
-	if args != "" {
+	if strings.Contains(command, "{}") {
+		// Placeholder mode: replace first {} with args.
+		command = strings.Replace(command, "{}", args, 1)
+	} else if args != "" {
+		// Append mode: add args to the end.
 		command = s.Command + " " + args
 	}
 	cmd := exec.CommandContext(ctx, "bash", "-l", "-c", command)

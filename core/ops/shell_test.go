@@ -86,6 +86,38 @@ func TestShellOpNoArgs(t *testing.T) {
 	}
 }
 
+func TestShellOpPlaceholder(t *testing.T) {
+	op := &ops.ShellOp{
+		CmdName: "greet",
+		Desc:    "test placeholder",
+		Command: `echo "hello {} world"`,
+	}
+
+	result, err := op.Execute(context.Background(), "crossfit")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result != "hello crossfit world" {
+		t.Errorf("result = %q, want %q", result, "hello crossfit world")
+	}
+}
+
+func TestShellOpPlaceholderEmpty(t *testing.T) {
+	op := &ops.ShellOp{
+		CmdName: "greet",
+		Desc:    "test placeholder with empty args",
+		Command: `echo "hello {} world"`,
+	}
+
+	result, err := op.Execute(context.Background(), "")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result != "hello  world" {
+		t.Errorf("result = %q, want %q", result, "hello  world")
+	}
+}
+
 func TestShellOpFailingCommand(t *testing.T) {
 	op := &ops.ShellOp{
 		CmdName: "fail-test",

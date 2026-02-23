@@ -72,6 +72,45 @@ func TestList(t *testing.T) {
 	}
 }
 
+func TestUnregister(t *testing.T) {
+	r := ops.NewRegistry()
+	op := &mockOp{name: "temp", desc: "temporary"}
+	r.Register(op)
+
+	if got := r.Get("temp"); got == nil {
+		t.Fatal("expected op before unregister")
+	}
+
+	r.Unregister("temp")
+
+	if got := r.Get("temp"); got != nil {
+		t.Errorf("expected nil after unregister, got %v", got)
+	}
+}
+
+func TestUnregisterNonExistent(t *testing.T) {
+	r := ops.NewRegistry()
+	// Should not panic.
+	r.Unregister("nonexistent")
+}
+
+func TestUnregisterAndReRegister(t *testing.T) {
+	r := ops.NewRegistry()
+	op1 := &mockOp{name: "cmd", desc: "first"}
+	r.Register(op1)
+
+	r.Unregister("cmd")
+
+	op2 := &mockOp{name: "cmd", desc: "second"}
+	if err := r.Register(op2); err != nil {
+		t.Fatalf("re-register after unregister: %v", err)
+	}
+	got := r.Get("cmd")
+	if got == nil || got.Description() != "second" {
+		t.Errorf("expected second op after re-register, got %v", got)
+	}
+}
+
 func TestListEmpty(t *testing.T) {
 	r := ops.NewRegistry()
 	list := r.List()

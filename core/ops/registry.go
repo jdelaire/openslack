@@ -38,6 +38,13 @@ func (r *Registry) Register(op Op) error {
 	return nil
 }
 
+// Unregister removes an operation by name. No-op if the name doesn't exist.
+func (r *Registry) Unregister(name string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.ops, name)
+}
+
 // Get returns the operation with the given name, or nil if not found.
 func (r *Registry) Get(name string) Op {
 	r.mu.RLock()
