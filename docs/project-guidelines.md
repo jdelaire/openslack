@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 go build ./...                          # Build all packages
-./build.sh                              # Build both binaries to ./bin/
+./build.sh                              # Build all binaries to ./bin/
 go test ./...                           # Run all tests
 go test ./core/ops/...                  # Run tests for a single package
 go test -run TestShellOpExecute ./core/ops/...  # Run a single test
@@ -51,6 +51,27 @@ openslackctl notify "text"
 **`core.Notifier`** / **`core.Receiver`** — Adapter interfaces for messaging platforms. Currently only Telegram.
 
 **Security interfaces** (`TOTPVerifier`, `RateLimiter`, `ApprovalStore`) — Injected into Dispatcher via `WithSecurity()`. If TOTP secret isn't in keychain, security is disabled gracefully.
+
+### Connector system
+
+Connectors are separate executables that extend OpenSlack with new tools. They communicate via JSON over stdin/stdout using a versioned protocol (`v1`).
+
+- **`core/connector/`** — Protocol types, config loader, process manager, and tool router.
+- **`connectors/sample/`** — Example connector binary with `echo`, `time`, and `sleep` tools.
+
+Tool calls use `connector.tool` format (e.g., `sample.echo`). The router splits the name, validates the connector and tool against the allowlist in config, and dispatches via the manager.
+
+Config lives at `~/.openslack/connectors.json`:
+```json
+{
+  "connectors": {
+    "sample": { "exec": "./bin/sample-connector", "tools": ["echo", "time"] }
+  },
+  "limits": { "req_max_bytes": 4096, "resp_max_bytes": 16384, "call_timeout_ms": 10000 }
+}
+```
+
+Security: no dynamic loading, no shell execution, strict allowlist, payload size limits, per-call timeouts.
 
 ### Custom commands
 
