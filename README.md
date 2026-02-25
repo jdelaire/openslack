@@ -75,12 +75,42 @@ Before running the daemon, you must store your Telegram credentials in the macOS
    Send commands to your Telegram bot (from your allowlisted Chat ID):
    - `/help` - List available commands and their risk levels.
    - `/status` - Check the daemon uptime and system status.
+   - `/tomorrow <task description>` - Create a task that starts tomorrow and is reminded daily at 06:00 local time.
+   - `/tasks` - List open tasks as `<id>: <description>`.
+   - `/done <id>` - Mark a task as done.
    - `/sample.echo hello` - Call the sample connector's echo tool.
    - `/sample.time` - Get the current time from the sample connector.
    - Any custom commands defined in `~/.openslack/commands.json`.
    - Any connector tools defined in `~/.openslack/connectors.json`.
 
    For protected commands, you must append your TOTP code (e.g., `/sample.echo hello 123456`). High-risk commands will respond with a nonce, requiring you to confirm with `/approve <nonce> <totp>`.
+
+## Tasks (MVP)
+
+Task data is stored in a single JSON file:
+
+- macOS path: `~/Library/Application Support/OpenSlack/tasks.json`
+
+Schema:
+
+- Top level: `next_id` and `tasks`
+- Per task: `id`, `text`, `created_at` (RFC3339), `start_date` (YYYY-MM-DD local), `status` (`open` or `done`), `schedule` (`daily_6am`), `last_reminded_date` (YYYY-MM-DD or `null`)
+
+Behavior:
+
+- `/tomorrow <text>` creates a task with `start_date = tomorrow` and replies `<id>: <text>`.
+- `/tasks` shows all open tasks sorted by ascending `id`; if none, replies `No open tasks.`.
+- `/done <id>` replies with one of:
+  - `Done: <id>`
+  - `Unknown task: <id>`
+  - `Already done: <id>`
+- At local 06:00 every day, OpenSlack sends one aggregated reminder containing all open tasks where `start_date <= today` and `last_reminded_date != today`.
+- If there are no tasks to remind, OpenSlack sends nothing.
+
+Idempotency note:
+
+- For at-most-once-per-day behavior across restarts, the daemon sets `last_reminded_date=today` and saves before sending.
+- If sending fails after save, that day can be missed for those tasks (logged as an error). This is the chosen MVP tradeoff.
 
 ## Custom Commands
 
